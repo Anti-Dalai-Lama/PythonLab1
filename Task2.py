@@ -10,7 +10,6 @@ def rotate(left, mid, right):
 def create_polygon(points):
     minpoint = min(points, key=lambda x: x[1])
     points.remove(minpoint)
-
     points.sort(
         key=lambda x: ((-1) * (x[0] - minpoint[0]) + (0) * (x[1] - minpoint[1])) / math.sqrt(
             math.pow((x[0] - minpoint[0]), 2) + math.pow((x[1] - minpoint[1]), 2)))

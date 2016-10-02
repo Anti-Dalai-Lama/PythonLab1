@@ -15,6 +15,7 @@ def create_polygon(points):
     points.sort(
         key=lambda x: ((-1) * (x[0] - minpoint[0]) + (0) * (x[1] - minpoint[1])) / math.sqrt(
             math.pow((x[0] - minpoint[0]), 2) + math.pow((x[1] - minpoint[1]), 2)))
+
     points.insert(0,minpoint)
 
     res = [points[0], points[1]]
