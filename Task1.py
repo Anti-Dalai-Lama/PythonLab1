@@ -1,7 +1,7 @@
 """31. Даны два множества точек на плоскости. Выбрать четыре различные точки первого множества так,
 чтобы квадрат с вершинами в этих точках накрывал все точки второго множества и имел минимальную площадь."""
 
-points = [(1, 2), (2, 4), (5, 8), (3, 4), (2, 1), (4, 8), (8, 3), (6, 1)]
+points = [(1, 2), (2,1),(2,3),(2, 4), (3,4),(4,2),(5,3),(5, 8),(5,5), (4, 8), (8, 3),(6,4), (6, 1)]
 
 import math
 
@@ -35,7 +35,7 @@ def point_inside_angle(point1, point2, point3, checkpoint):
     return True
 
 def intersect(p1, p2, x1, x2):
-    return rotate(p1, p2, x1)*rotate(p1, p2, x2) <=0 and rotate(x1,x2,p1)*rotate(x1,x2,p2)<0
+    return rotate(p1, p2, x1)*rotate(p1, p2, x2) <=0 and rotate(x1,x2,p1)*rotate(x1,x2,p2)<0 #имеют или не имеют пересечение в крайней точке
 
 
 def check_inside_polygon(point, polygon):
@@ -55,3 +55,4 @@ def check_inside_polygon(point, polygon):
 
 
 create_polygon(points)
+print(intersect((2,1),(8,3),(5,3),(8,3)))
