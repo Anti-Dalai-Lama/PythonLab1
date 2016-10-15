@@ -11,6 +11,22 @@ class VectorOperations(object):
     def rotate(left, mid, right): #если точка r вектора rm лежит левее вектора ml, то z > 0 (в векторном произведении первый множитель лежит правее)
         return (mid[0]-left[0])*(right[1]-mid[1])-(mid[1]-left[1])*(right[0]-mid[0]) #векторное произведение a × b = {aybz - azby; azbx - axbz; axby - aybx} > 0 если поворот левый! (смотрим только z координату!))
 
+    @staticmethod
+    def has_intersection(p1, p2, x1, x2):
+        return VectorOperations.rotate(p1, p2, x1)*VectorOperations.rotate(p1, p2, x2) <=0 and VectorOperations.rotate(x1,x2,p1)*VectorOperations.rotate(x1,x2,p2)<=0 #имеют пересечение в крайней точке
+
+    @staticmethod
+    def point_inside_angle(point1, point2, point3, checkpoint):  # can be on the line
+        if VectorOperations.rotate(point2, point1, checkpoint) >= 0 or VectorOperations.rotate(point2, point3, checkpoint) <= 0:
+            return False
+        return True
+
+    @staticmethod
+    def vector_module(point1, point2, accuracy):
+        return int(math.sqrt(math.pow(point1[0] - point2[0], 2) + math.pow(point1[1] - point2[1], 2)) * accuracy)
+
+
+
 class Polygon(object):
     def __init__(self,points):
         minpoint = min(points, key=lambda x: x[1])
@@ -36,86 +52,94 @@ class Polygon(object):
     def __len__(self):
         return len(self.points)
 
-def point_inside_angle(point1, point2, point3, checkpoint): #can be on the line
-    if VectorOperations.rotate(point2, point1, checkpoint) > 0 or VectorOperations.rotate(point2, point3, checkpoint) < 0:
-        return False
-    return True
+    def has_point(self, point):
+        startpoint = self.points[0]
+        if VectorOperations.point_inside_angle(self.points[-1], startpoint, self.points[1], point) and point != startpoint:
+            r = 1
+            l = len(self.points) - 1
+            if len(self.points) > 3:  #проверяем четырехугольники и больше
+                while l - r > 1:
+                    q = (r + l) // 2
+                    if VectorOperations.rotate(startpoint, self.points[q], point) > 0:
+                        r = q
+                    else:
+                        l = q
+            return not VectorOperations.has_intersection(startpoint, point, self.points[l], self.points[r])
+        else:
+            return False
 
-def intersect(p1, p2, x1, x2):
-    return VectorOperations.rotate(p1, p2, x1)*VectorOperations.rotate(p1, p2, x2) <=0 and VectorOperations.rotate(x1,x2,p1)*VectorOperations.rotate(x1,x2,p2)<=0 #имеют пересечение в крайней точке
+    def get_external_points(self, points):
+        return filter(lambda x: not self.has_point(x), points)
+
+    def includes_polygon(self, polygon):
+        for i in range(0, len(polygon.points)):
+            if (not self.has_point(polygon[i])):
+                print(polygon[i])
+                return False
+        return True
 
 
-def point_inside_polygon(point, polygon):
-    startpoint = polygon[0]
-    if point_inside_angle(polygon[-1], startpoint, polygon[1], point) and point != startpoint:
-        r = 1
-        l = len(polygon) - 1
-        if len(polygon) > 3: #проверяем четырехугольники и больше
-            while l - r > 1:
-                q = (r+l)//2
-                if VectorOperations.rotate(startpoint, polygon[q], point) > 0:
-                    r = q
+
+
+class SquareOperations(object):
+    accuracy = 1000
+    @staticmethod
+    def get_dict_lines_by_length(points):
+        dictionary = {}
+        for i in range(0, len(points) - 1):
+            for j in range(i + 1, len(points)):
+                length = VectorOperations.vector_module(points[j], points[i], SquareOperations.accuracy)
+                if (length in dictionary):
+                    dictionary[length].append((points[j], points[i]))
                 else:
-                    l = q
-        return not intersect(startpoint, point, polygon[l], polygon[r])
-    else:
+                    dictionary[length] = [(points[j], points[i])]
+
+        dictionary.pop(min(dictionary.items(), key=lambda x: x[0])[0])
+        return dictionary
+
+    @staticmethod
+    def diagonals_create_square(line1, line2):
+        return VectorOperations.vector_module(line1[0], line2[0], SquareOperations.accuracy) == VectorOperations.vector_module(line1[0], line2[1], SquareOperations.accuracy) \
+               == VectorOperations.vector_module(line1[1], line2[0], SquareOperations.accuracy) == VectorOperations.vector_module(line1[1],line2[1], SquareOperations.accuracy)
+
+    @staticmethod
+    def find_min_allowed_square(dictionary, polygon):
+        while (len(dictionary) != 0):
+            current = dictionary.pop(min(dictionary.items(), key=lambda x: x[0])[0])#min получает целиком весь элемент по key, беру из этого элемента length и по нему pop value
+            if(len(current) > 1):
+                square = SquareOperations.get_square(current, polygon)
+                if (square != False):
+                    return square
+        return None
+
+    @staticmethod
+    def get_square(lines, polygon):
+        for i in range(0, len(lines) - 1):
+            for j in range(i + 1, len(lines)):
+                if (VectorOperations.has_intersection(lines[i][0], lines[i][1], lines[j][0], lines[j][1]) and SquareOperations.diagonals_create_square(lines[i], lines[j])):
+                    print("SQ: ", [lines[i][0], lines[j][1], lines[i][1], lines[j][0]])
+                    if (Polygon([lines[i][0], lines[j][1], lines[i][1], lines[j][0]]).includes_polygon(polygon)):
+                        return (lines[i][0], lines[j][1], lines[i][1], lines[j][0])
         return False
 
-def delete_excess_points(points, polygon):
-    return filter(lambda x: point_inside_polygon(x, polygon), points)
 
-def points_inside_polygon(points, polygon):
-    flag = True
-    for i in range(0, len(points)):
-        flag = flag and point_inside_polygon(points[i], polygon)
-    return flag
-
-def vector_module(point1, point2):
-    return int(math.sqrt(math.pow(point1[0] - point2[0],2) + math.pow(point1[1] - point2[1],2)) * 1000)
-
-def get_lines_by_length_dict(points):
-    dictionary = {}
-    print(points)
-    for i in range(0, len(points)-1):
-        for j in range(i+1, len(points)):
-            length = vector_module(points[j], points[i])
-            if(length in dictionary):
-                dictionary[length].append((points[j], points[i]))
-            else:
-                dictionary[length] = [(points[j], points[i])]
-
-    dictionary.pop(min(dictionary.items(), key=lambda x: x[0])[0])
-    return dictionary
-
-def find_allowed_square(dictionary, polygon):
-    while(len(dictionary) != 0):
-        current = dictionary.pop(min(dictionary.items(), key=lambda x: x[0])[0])
-        square = get_squares(current[1], polygon)
-        if(square != False):
-            return square
+def solve_task(squarepoints, points):
+    polygon = Polygon(points)
+    print("Polygon: ", polygon.points)
+    sqlen = squarepoints.__len__()
+    squarepoints = list(polygon.get_external_points(squarepoints))
+    print("External points: ", squarepoints)
+    print("Points deleted: ", sqlen - squarepoints.__len__())
+    dictionary = SquareOperations.get_dict_lines_by_length(squarepoints)
+    print(dictionary)
+    square = SquareOperations.find_min_allowed_square(dictionary, polygon)
+    if(square == None):
+        print("There is no such square!")
+    else:
+        print("Square: ", square)
 
 
-def get_squares(lines, polygon):
-    for i in range(0, len(lines)-1):
-        for j in range(i+1, len(lines)):
-            if(intersect(lines[i][0], lines[i][1], lines[j][0], lines[j][1]) and diagonals_create_square(lines[i], lines[j])):
-                if(points_inside_polygon((lines[i][0],lines[j][1],lines[i][1],lines[j][0]), polygon)):
-                    return (lines[i][0],lines[j][1],lines[i][1],lines[j][0])
-    return False
+points = [(6, 7), (7,4),(8,7),(8, 10), (9,10),(10,9),(10,6),(11, 8),(12,4), (12, 9)] #[(5, 7), (7,4),(8,7),(8, 11), (9,10),(10,9),(10,6),(11, 8),(12,4), (13, 9)]
+squarepoints = [(1, 2), (1,5),(1,13),(4, 1), (4,3),(5,3),(5,9),(5, 11),(6,5), (9, 5), (9, 13),(10,1), (10, 9), (13,3),(13,9), (13, 11), (14,5), (14, 7), (17,5), (17,13), (0,0), (0,15), (15,15), (15,0)]
 
-def diagonals_create_square(line1, line2):
-    return vector_module(line1[0],line2[0]) == vector_module(line1[0],line2[1]) == vector_module(line1[1],line2[0]) == vector_module(line1[1],line2[1])
-
-
-
-
-points = [(1, 2), (2,1),(2,3),(2, 4), (3,4),(4,2),(5,3),(5, 8),(5,5), (4, 8), (8, 3),(6,4), (6, 1)]
-
-polygon = Polygon(points)
-
-
-
-get_lines_by_length_dict([(4,2),(5,3),(1,3),(0,0),(4,8)])
-
-# get_squares([((1,1),(4,4)), ((1,4),(4,1)), ((4,4),(1,7)), ((4,7),(1,4)),
-#                            ((4,4),(7,7)), ((2,3),(5,0))])
+solve_task(squarepoints, points)
