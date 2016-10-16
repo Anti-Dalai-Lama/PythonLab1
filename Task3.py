@@ -11,6 +11,9 @@ class MatrixSquare(object):
             return True
         return False
 
+    def __str__(self):
+        return "Square row = " + str(self.row) + " col = " + str(self.col) + " side = " + str(self.side)
+
 
 class Matrix(object):
     pseudo_squares = list()
@@ -34,23 +37,31 @@ class Matrix(object):
                     #добавить проверку на то, является ли матрица вписанной в другую?
                     self.pseudo_squares.append(sq)
 
-    #def check_symmetric_square(self):
+    def print_pseudo_sq(self):
+        for el in self.pseudo_squares:
+            print(el)
+
+    # def check_symmetric_square(self, matrix_square):
+    #     for i in range(matrix_square.row + 1, matrix_square.row + matrix_square.side):
+    #         for j in range(matrix_square.col, matrix_square.col + matrix_square.side):
+    #             #check mirror elements
 
 
 
 
-matrix = [[1,4,6,4,7],
-          [7,3,5,9,2],
-          [0,0,5,4,3],
-          [3,3,5,2,8],
-          [4,6,4,3,2],
-          [4,2,9,5,4],
-          [1,1,6,8,3],
-          [4,5,8,6,4],
-          [5,7,4,2,1]]
+matrix = [[5,0,7,9,1,2],
+          [0,0,4,3,2,7],
+          [8,3,1,2,8,1],
+          [1,6,4,7,1,5],
+          [0,9,5,5,3,7],
+          [4,8,1,1,2,4],
+          [1,3,0,5,6,3],
+          [9,7,5,6,3,1],
+          [8,3,6,3,1,8]]
 
 mymatrix = Matrix(matrix)
 mymatrix.get_pseudo_squares()
+mymatrix.print_pseudo_sq()
 
 print(MatrixSquare(2,2,3).contains(MatrixSquare(3,3,3)))
 
