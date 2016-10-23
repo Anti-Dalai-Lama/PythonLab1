@@ -8,7 +8,7 @@ import math
 
 class VectorOperations(object):
     @staticmethod
-    def rotate(left, mid, right): #если точка r вектора rm лежит левее вектора ml, то z > 0 (в векторном произведении первый множитель лежит правее)
+    def rotate(left, mid, right): # если точка r вектора mr лежит левее вектора lm, то res > 0
         return (mid[0]-left[0])*(right[1]-mid[1])-(mid[1]-left[1])*(right[0]-mid[0]) #векторное произведение a × b = {aybz - azby; azbx - axbz; axby - aybx} > 0 если поворот левый! (смотрим только z координату!))
 
     @staticmethod
@@ -28,10 +28,12 @@ class VectorOperations(object):
 
 
 class Polygon(object):
-    def __init__(self,points):
+    def __init__(self,points):  #O(n*log(n))
         minpoint = min(points, key=lambda x: x[1])
         points.remove(minpoint)
-        points.sort(
+        # https://ru.wikipedia.org/wiki/Timsort
+        # сложность сортировки O(n*log(n))
+        points.sort(  # сортируем по косинусу угла между вектором (-1,0) и вектором от minpoint до рассматриваемой (убывание)
             key=lambda x: ((-1) * (x[0] - minpoint[0]) + (0) * (x[1] - minpoint[1])) / math.sqrt(
                 math.pow((x[0] - minpoint[0]), 2) + math.pow((x[1] - minpoint[1]), 2)))
         points.insert(0,minpoint)
@@ -74,17 +76,14 @@ class Polygon(object):
     def includes_polygon(self, polygon):
         for i in range(0, len(polygon.points)):
             if (not self.has_point(polygon[i])):
-                print(polygon[i])
                 return False
         return True
-
-
 
 
 class SquareOperations(object):
     accuracy = 1000
     @staticmethod
-    def get_dict_lines_by_length(points):
+    def get_dict_lines_by_length(points):  # создаем словарь key = длина между точками, val = пары точек
         dictionary = {}
         for i in range(0, len(points) - 1):
             for j in range(i + 1, len(points)):
@@ -98,14 +97,14 @@ class SquareOperations(object):
         return dictionary
 
     @staticmethod
-    def diagonals_create_square(line1, line2):
+    def diagonals_create_square(line1, line2):  # сравниваем длины сторон четырехугольника
         return VectorOperations.vector_module(line1[0], line2[0], SquareOperations.accuracy) == VectorOperations.vector_module(line1[0], line2[1], SquareOperations.accuracy) \
                == VectorOperations.vector_module(line1[1], line2[0], SquareOperations.accuracy) == VectorOperations.vector_module(line1[1],line2[1], SquareOperations.accuracy)
 
     @staticmethod
     def find_min_allowed_square(dictionary, polygon):
         while (len(dictionary) != 0):
-            current = dictionary.pop(min(dictionary.items(), key=lambda x: x[0])[0])#min получает целиком весь элемент по key, беру из этого элемента length и по нему pop value
+            current = dictionary.pop(min(dictionary.items(), key=lambda x: x[0])[0])  # min получает целиком весь элемент по key, беру из этого элемента length и по нему pop value
             if(len(current) > 1):
                 square = SquareOperations.get_square(current, polygon)
                 if (square != False):
@@ -117,7 +116,6 @@ class SquareOperations(object):
         for i in range(0, len(lines) - 1):
             for j in range(i + 1, len(lines)):
                 if (VectorOperations.has_intersection(lines[i][0], lines[i][1], lines[j][0], lines[j][1]) and SquareOperations.diagonals_create_square(lines[i], lines[j])):
-                    print("SQ: ", [lines[i][0], lines[j][1], lines[i][1], lines[j][0]])
                     if (Polygon([lines[i][0], lines[j][1], lines[i][1], lines[j][0]]).includes_polygon(polygon)):
                         return (lines[i][0], lines[j][1], lines[i][1], lines[j][0])
         return False

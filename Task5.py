@@ -30,7 +30,7 @@ class TurningEncryption(object):
                 self.list_letters.append(self.text[pos])  # decided to avoid string concatenation (memory issues)
         return ''.join(self.list_letters) # getting string from list
 
-    def decrypt(self):  #O()
+    def decrypt(self):  #O(n)
         self.list_letters.clear()
         for i in range(0, self.text_len // self.block_len):  # creating empty list to store blocks and elements [[],[]]
             temp = list()
